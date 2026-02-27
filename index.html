@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel de Oposiciones | Mis Temas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    .tema-card:hover { transform: translateY(-4px); transition: all 0.2s ease; }
+    .chip { display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .55rem; border-radius:9999px; font-size:.72rem; font-weight:700; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; padding: .1rem .35rem; border: 1px solid #e2e8f0; border-bottom-width: 2px; border-radius: .35rem; background:#fff; }
+    .modal-open { overflow:hidden; }
+    .shadow-soft { box-shadow: 0 10px 30px rgba(2, 6, 23, .08); }
+    .gamma-badge { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+    .no-gamma { opacity: 0.65; }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="bg-blue-900 text-white shadow-lg p-5 sticky top-0 z-20">
+    <div class="container mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+          <i class="fas fa-graduation-cap text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold leading-tight">Academia de Oposiciones</h1>
+          <p class="text-white/80 text-sm">Panel de temas + dashboards Gamma</p>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-auto flex flex-col md:flex-row gap-3 md:items-center">
+        <div class="relative w-full md:w-96">
+          <input type="text" id="buscador"
+            placeholder="Buscar (ej: Tema 5, 'evaluación', 'currículo'...)"
+            class="w-full pl-10 pr-24 py-2.5 rounded-full text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            autocomplete="off"/>
+          <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <button id="btnClear"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-600 hover:text-slate-900 px-2 py-1 rounded-lg hover:bg-slate-100"
+            title="Limpiar búsqueda">Limpiar</button>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button id="btnExport" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-sm font-semibold">
+            <i class="fas fa-file-export mr-2"></i>Exportar
+          </button>
+          <label class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-sm font-semibold cursor-pointer">
+            <i class="fas fa-file-import mr-2"></i>Importar
+            <input id="fileImport" type="file" accept="application/json" class="hidden"/>
+          </label>
+          <button id="btnReset" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-sm font-semibold">
+            <i class="fas fa-rotate-left mr-2"></i>Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Controls -->
+  <section class="container mx-auto px-6 pt-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-soft">
+      <div class="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+        <div class="flex flex-wrap gap-2 items-center">
+          <span class="chip bg-blue-50 text-blue-700 border border-blue-100"><i class="fas fa-layer-group"></i>FILTROS</span>
+          <button data-filter="all" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-border-all"></i>Todos</button>
+          <button data-filter="pending" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="far fa-circle"></i>Pendientes</button>
+          <button data-filter="done" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-check-circle"></i>Vistos</button>
+          <button data-filter="fav" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-star"></i>Favoritos</button>
+          <button data-filter="gamma" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-bolt"></i>Con Gamma</button>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-3 md:items-center">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-slate-600">Orden:</span>
+            <select id="selectOrden" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm">
+              <option value="id_asc">Tema (1 → 25)</option>
+              <option value="id_desc">Tema (25 → 1)</option>
+              <option value="last_desc">Última visita (reciente)</option>
+              <option value="last_asc">Última visita (antigua)</option>
+              <option value="fav_desc">Favoritos primero</option>
+              <option value="done_desc">Vistos primero</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-slate-600">Vista:</span>
+            <button id="btnVistaGrid" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm hover:bg-slate-50"><i class="fas fa-grip mr-2"></i>Grid</button>
+            <button id="btnVistaList" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm hover:bg-slate-50"><i class="fas fa-list mr-2"></i>Lista</button>
+          </div>
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+            <span class="kbd">Ctrl</span>+<span class="kbd">K</span> buscar
+            <span class="mx-2">·</span>
+            <span class="kbd">Esc</span> cerrar modal
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <div class="text-xs text-slate-500">Total</div>
+          <div id="statTotal" class="text-2xl font-extrabold text-slate-800">0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <div class="text-xs text-slate-500">Vistos</div>
+          <div id="statDone" class="text-2xl font-extrabold text-emerald-600">0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <div class="text-xs text-slate-500">Pendientes</div>
+          <div id="statPending" class="text-2xl font-extrabold text-amber-600">0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <div class="text-xs text-slate-500">Favoritos</div>
+          <div id="statFav" class="text-2xl font-extrabold text-yellow-600">0</div>
+        </div>
+        <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-3">
+          <div class="text-xs text-indigo-500">Con Gamma</div>
+          <div id="statGamma" class="text-2xl font-extrabold text-indigo-600">0</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main -->
+  <main class="container mx-auto p-6">
+    <div id="gridTemas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden">
+    <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/60"></div>
+    <div class="relative container mx-auto px-4 py-6 h-full flex items-center justify-center">
+      <div class="bg-white w-full max-w-6xl rounded-2xl shadow-soft overflow-hidden border border-slate-200" style="max-height:95vh;">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4 border-b border-slate-200">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 id="modalTitle" class="text-lg font-extrabold text-slate-800">Tema</h2>
+                <span id="modalBadge" class="chip text-white gamma-badge"><i class="fas fa-bolt"></i>Gamma</span>
+              </div>
+              <p id="modalSubtitle" class="text-sm text-slate-500"></p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 items-center justify-end">
+            <button id="btnMarkDone" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">
+              <i class="fas fa-check mr-2"></i>Marcar visto
+            </button>
+            <button id="btnFav" class="px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold">
+              <i class="fas fa-star mr-2"></i>Favorito
+            </button>
+            <button id="btnOpenNew" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
+              <i class="fas fa-arrow-up-right-from-square mr-2"></i>Abrir en Gamma
+            </button>
+            <button id="btnCloseModal" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200">
+              <i class="fas fa-xmark mr-2"></i>Cerrar
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4" style="max-height:calc(95vh - 80px); overflow:hidden;">
+          <!-- Viewer -->
+          <div class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col">
+            <div id="iframeHint" class="hidden p-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+              <i class="fas fa-triangle-exclamation mr-2"></i>
+              Si el dashboard no carga aquí, usa <b>"Abrir en Gamma"</b> para verlo en pestaña nueva.
+            </div>
+            <!-- No gamma placeholder -->
+            <div id="noGammaPlaceholder" class="hidden w-full h-full flex items-center justify-center p-10 text-center bg-slate-50" style="min-height:65vh;">
+              <div>
+                <div class="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-clock text-2xl text-slate-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-700 mb-2">Dashboard próximamente</h3>
+                <p class="text-slate-500 text-sm max-w-xs mx-auto">Este tema aún no tiene dashboard Gamma. Se añadirá cuando esté disponible.</p>
+              </div>
+            </div>
+            <iframe id="modalIframe" title="Dashboard Gamma"
+              class="w-full bg-white" style="height:65vh;min-height:65vh;"
+              src="about:blank" loading="lazy" allow="fullscreen"></iframe>
+          </div>
+
+          <!-- Notes -->
+          <div class="lg:col-span-1 p-4 overflow-y-auto">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-extrabold text-slate-800">Notas rápidas</h3>
+              <span id="noteSaved" class="text-xs text-emerald-600 hidden"><i class="fas fa-check mr-1"></i>Guardado</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">Apuntes breves por tema (guardados en tu navegador).</p>
+            <textarea id="notesArea"
+              class="w-full rounded-2xl border border-slate-200 p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              style="min-height:280px;"
+              placeholder="Ej: 'Recordar autores clave', 'Conectar con DUA', 'Meter ejemplo de aula rural'…"></textarea>
+            <div class="mt-3 flex gap-2">
+              <button id="btnSaveNote" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold">
+                <i class="fas fa-floppy-disk mr-2"></i>Guardar
+              </button>
+              <button id="btnClearNote" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200">
+                <i class="fas fa-eraser mr-2"></i>Borrar
+              </button>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+              <div><b>Privacidad:</b> usa localStorage (no envía datos).</div>
+              <div><b>Sugerencia:</b> Exportar/Importar para varios equipos.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-soft text-sm flex items-center gap-2">
+      <i class="fas fa-circle-check text-emerald-300"></i>
+      <span id="toastMsg">Listo</span>
+    </div>
+  </div>
+
+  <script>
+    /**********************
+     * ╔══════════════════════════════════════╗
+     * ║  CONFIGURA AQUÍ TUS DASHBOARDS GAMMA ║
+     * ╚══════════════════════════════════════╝
+     *
+     * Formato: { id: N, titulo: "...", descripcion: "...", url: "https://..." }
+     * - Pon url: null para temas sin dashboard todavía.
+     * - El sistema genera automáticamente tarjetas para los 25 temas.
+     **********************/
+    const TOTAL_TEMAS = 25;
+
+    const GAMMA_URLS = {
+      1: "https://gamma.app/embed/bl2apr4o37odfqu",
+      2: "https://gamma.app/embed/g2fv54bvo71nnk2",
+      // ── Añade aquí los siguientes temas cuando los tengas ──
+      // 3: "https://tu-tema-3.gamma.site/",
+      // 4: "https://tu-tema-4.gamma.site/",
+      // ... hasta el 25
+    };
+
+    // Títulos personalizados (opcional, si no se pone usa "Tema N")
+    const TITULOS = {
+      1: "Desarrollo Psicoevolutivo (6-12 años)",
+      2: "La Concreción del Currículo en el PEC",
+      // 3: "Tu título aquí",
+    };
+
+    // Descripciones personalizadas (opcional)
+    const DESCRIPCIONES = {
+      1: "Aspectos cognitivos, motrices, afectivos y sociales. Implicaciones en el proceso educativo y de enseñanza-aprendizaje.",
+      2: "Programación docente, principios pedagógicos, estrategias para su elaboración en ciclo, curso y aula. Coordinación docente.",
+    };
+
+    /**********************
+     * STORAGE
+     **********************/
+    const STORAGE_KEY = "opos_panel_v2";
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { temas: {}, ui: { filter: "all", order: "id_asc", view: "grid" } };
+        const parsed = JSON.parse(raw);
+        if (!parsed.temas) parsed.temas = {};
+        if (!parsed.ui) parsed.ui = { filter: "all", order: "id_asc", view: "grid" };
+        return parsed;
+      } catch { return { temas: {}, ui: { filter: "all", order: "id_asc", view: "grid" } }; }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      refreshStats();
+    }
+
+    function ensureTema(id) {
+      if (!state.temas[id]) state.temas[id] = { done: false, fav: false, lastVisited: null, notes: "" };
+      return state.temas[id];
+    }
+
+    let state = loadState();
+
+    /**********************
+     * DATA
+     **********************/
+    const temas = Array.from({ length: TOTAL_TEMAS }, (_, i) => {
+      const id = i + 1;
+      return {
+        id,
+        titulo: TITULOS[id] || `Tema ${id}`,
+        descripcion: DESCRIPCIONES[id] || `Materiales y dashboard del Tema ${id}.`,
+        url: GAMMA_URLS[id] || null
+      };
+    });
+
+    /**********************
+     * ELEMENTS
+     **********************/
+    const grid = document.getElementById("gridTemas");
+    const buscador = document.getElementById("buscador");
+    const btnClear = document.getElementById("btnClear");
+    const selectOrden = document.getElementById("selectOrden");
+    const btnVistaGrid = document.getElementById("btnVistaGrid");
+    const btnVistaList = document.getElementById("btnVistaList");
+    const statTotal = document.getElementById("statTotal");
+    const statDone = document.getElementById("statDone");
+    const statPending = document.getElementById("statPending");
+    const statFav = document.getElementById("statFav");
+    const statGamma = document.getElementById("statGamma");
+    const btnExport = document.getElementById("btnExport");
+    const fileImport = document.getElementById("fileImport");
+    const btnReset = document.getElementById("btnReset");
+
+    // Modal
+    const modal = document.getElementById("modal");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const btnCloseModal = document.getElementById("btnCloseModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    const modalBadge = document.getElementById("modalBadge");
+    const modalIframe = document.getElementById("modalIframe");
+    const iframeHint = document.getElementById("iframeHint");
+    const noGammaPlaceholder = document.getElementById("noGammaPlaceholder");
+    const btnOpenNew = document.getElementById("btnOpenNew");
+    const btnMarkDone = document.getElementById("btnMarkDone");
+    const btnFav = document.getElementById("btnFav");
+    const notesArea = document.getElementById("notesArea");
+    const btnSaveNote = document.getElementById("btnSaveNote");
+    const btnClearNote = document.getElementById("btnClearNote");
+    const noteSaved = document.getElementById("noteSaved");
+    const toast = document.getElementById("toast");
+    const toastMsg = document.getElementById("toastMsg");
+    let toastTimer = null;
+
+    /**********************
+     * TOAST
+     **********************/
+    function toastShow(msg) {
+      toastMsg.textContent = msg;
+      toast.classList.remove("hidden");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add("hidden"), 2200);
+    }
+
+    /**********************
+     * UI STATE
+     **********************/
+    function setActiveFilterButton(filter) {
+      document.querySelectorAll(".filterBtn").forEach(btn => {
+        const active = btn.getAttribute("data-filter") === filter;
+        btn.classList.toggle("bg-blue-600", active);
+        btn.classList.toggle("text-white", active);
+        btn.classList.toggle("border-blue-600", active);
+        btn.classList.toggle("bg-slate-50", !active);
+        btn.classList.toggle("text-slate-700", !active);
+        btn.classList.toggle("border-slate-200", !active);
+      });
+    }
+
+    function setView(view) {
+      state.ui.view = view;
+      saveState();
+      if (view === "grid") {
+        grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5";
+        btnVistaGrid.classList.add("bg-slate-900","text-white","border-slate-900");
+        btnVistaGrid.classList.remove("bg-white","text-slate-800");
+        btnVistaList.classList.add("bg-white","text-slate-800");
+        btnVistaList.classList.remove("bg-slate-900","text-white","border-slate-900");
+      } else {
+        grid.className = "flex flex-col gap-3";
+        btnVistaList.classList.add("bg-slate-900","text-white","border-slate-900");
+        btnVistaList.classList.remove("bg-white","text-slate-800");
+        btnVistaGrid.classList.add("bg-white","text-slate-800");
+        btnVistaGrid.classList.remove("bg-slate-900","text-white","border-slate-900");
+      }
+      render();
+    }
+
+    /**********************
+     * RENDER
+     **********************/
+    function render() {
+      const q = buscador.value.toLowerCase().trim();
+      const filter = state.ui.filter || "all";
+      const order = state.ui.order || "id_asc";
+      const view = state.ui.view || "grid";
+
+      let lista = temas.filter(t => {
+        const meta = ensureTema(t.id);
+        if (q && !t.titulo.toLowerCase().includes(q) && !t.descripcion.toLowerCase().includes(q) && !String(t.id).includes(q)) return false;
+        if (filter === "done" && !meta.done) return false;
+        if (filter === "pending" && meta.done) return false;
+        if (filter === "fav" && !meta.fav) return false;
+        if (filter === "gamma" && !t.url) return false;
+        return true;
+      });
+
+      lista.sort((a, b) => {
+        const ma = ensureTema(a.id), mb = ensureTema(b.id);
+        if (order === "id_asc") return a.id - b.id;
+        if (order === "id_desc") return b.id - a.id;
+        if (order === "last_desc") return (mb.lastVisited||0) - (ma.lastVisited||0);
+        if (order === "last_asc") return (ma.lastVisited||0) - (mb.lastVisited||0);
+        if (order === "fav_desc") return (mb.fav?1:0) - (ma.fav?1:0);
+        if (order === "done_desc") return (mb.done?1:0) - (ma.done?1:0);
+        return 0;
+      });
+
+      grid.innerHTML = "";
+
+      lista.forEach(t => {
+        const meta = ensureTema(t.id);
+        const card = document.createElement("div");
+        const doneClass = meta.done ? "border-emerald-200 bg-emerald-50/30" : "";
+        const favIcon = meta.fav ? "fas fa-star text-yellow-400" : "far fa-star text-slate-400 hover:text-yellow-400";
+        const doneBadge = meta.done
+          ? `<span class="chip bg-emerald-100 text-emerald-700 border border-emerald-200"><i class="fas fa-check-circle"></i>Visto</span>` : "";
+        const gammaBadge = t.url
+          ? `<span class="chip text-white gamma-badge"><i class="fas fa-bolt"></i>Gamma</span>`
+          : `<span class="chip bg-slate-100 text-slate-500 border border-slate-200"><i class="fas fa-clock"></i>Próximamente</span>`;
+        const last = meta.lastVisited
+          ? new Date(meta.lastVisited).toLocaleDateString("es-ES", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })
+          : "Nunca";
+
+        if (view === "grid") {
+          card.className = `tema-card bg-white rounded-2xl shadow-md overflow-hidden border border-slate-200 p-5 flex flex-col justify-between ${doneClass} ${!t.url ? "no-gamma" : ""}`;
+          card.innerHTML = `
+            <div>
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex flex-wrap gap-1">${gammaBadge}${doneBadge}</div>
+                <button class="btnFavCard" data-id="${t.id}" title="Favorito" aria-label="Favorito">
+                  <i class="${favIcon} text-lg"></i>
+                </button>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="chip bg-blue-50 text-blue-700 border border-blue-100 text-base font-extrabold">#${t.id}</span>
+                <h3 class="text-lg font-extrabold text-slate-800">${t.titulo}</h3>
+              </div>
+              <p class="text-slate-500 text-sm mb-3">${t.descripcion}</p>
+              <div class="text-xs text-slate-500 flex items-center gap-2">
+                <i class="fas fa-clock"></i>
+                <span><b>Última visita:</b> ${last}</span>
+              </div>
+              ${meta.notes ? `<div class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700"><div class="font-bold mb-1"><i class="fas fa-note-sticky mr-2 text-slate-400"></i>Notas</div><div class="line-clamp-2">${escapeHtml(meta.notes).slice(0,180)}${meta.notes.length>180?"…":""}</div></div>` : ""}
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              <button class="btnOpenModal w-full ${t.url ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"} text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                data-id="${t.id}" ${!t.url ? "disabled" : ""}>
+                <i class="fas fa-bolt"></i> ${t.url ? "Ver Tema" : "Sin dashboard"}
+              </button>
+              <button class="btnToggleDone w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-xl transition-colors border border-slate-200 flex items-center justify-center gap-2"
+                data-id="${t.id}">
+                <i class="${meta.done ? "fas fa-rotate-left" : "fas fa-check"}"></i>
+                ${meta.done ? "Desmarcar" : "Visto"}
+              </button>
+            </div>`;
+        } else {
+          card.className = `tema-card bg-white rounded-2xl shadow-md overflow-hidden border border-slate-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 ${doneClass} ${!t.url ? "no-gamma" : ""}`;
+          card.innerHTML = `
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <span class="chip bg-blue-50 text-blue-700 border border-blue-100 font-extrabold">#${t.id}</span>
+                <h3 class="text-lg font-extrabold text-slate-800">${t.titulo}</h3>
+                ${gammaBadge}${doneBadge}
+              </div>
+              <div class="text-sm text-slate-500 mb-1">${t.descripcion}</div>
+              <div class="text-xs text-slate-500 flex items-center gap-2">
+                <i class="fas fa-clock"></i>
+                <span><b>Última visita:</b> ${last}</span>
+                ${meta.notes ? `<span class="ml-2 chip bg-slate-50 text-slate-700 border border-slate-200"><i class="fas fa-note-sticky"></i>Con notas</span>` : ""}
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btnFavCard px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50" data-id="${t.id}" title="Favorito"><i class="${favIcon}"></i></button>
+              <button class="btnToggleDone px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold border border-slate-200" data-id="${t.id}">
+                <i class="${meta.done ? "fas fa-rotate-left" : "fas fa-check"} mr-2"></i>${meta.done ? "Desmarcar" : "Visto"}
+              </button>
+              <button class="btnOpenModal px-3 py-2 rounded-xl ${t.url ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"} text-white font-semibold"
+                data-id="${t.id}" ${!t.url ? "disabled" : ""}>
+                <i class="fas fa-bolt mr-2"></i>${t.url ? "Ver Tema" : "Sin dashboard"}
+              </button>
+            </div>`;
+        }
+
+        grid.appendChild(card);
+      });
+
+      hookCardEvents();
+      refreshStats();
+    }
+
+    function hookCardEvents() {
+      grid.querySelectorAll(".btnOpenModal:not([disabled])").forEach(btn => {
+        btn.addEventListener("click", (e) => { e.stopPropagation(); openModal(Number(btn.getAttribute("data-id"))); });
+      });
+      grid.querySelectorAll(".btnToggleDone").forEach(btn => {
+        btn.addEventListener("click", (e) => { e.stopPropagation(); toggleDone(Number(btn.getAttribute("data-id"))); });
+      });
+      grid.querySelectorAll(".btnFavCard").forEach(btn => {
+        btn.addEventListener("click", (e) => { e.stopPropagation(); toggleFav(Number(btn.getAttribute("data-id"))); });
+      });
+    }
+
+    function refreshStats() {
+      const all = temas.length;
+      let done = 0, fav = 0, gammaCount = 0;
+      temas.forEach(t => {
+        const meta = ensureTema(t.id);
+        if (meta.done) done++;
+        if (meta.fav) fav++;
+        if (t.url) gammaCount++;
+      });
+      statTotal.textContent = all;
+      statDone.textContent = done;
+      statPending.textContent = all - done;
+      statFav.textContent = fav;
+      statGamma.textContent = gammaCount;
+    }
+
+    /**********************
+     * ACTIONS
+     **********************/
+    function toggleDone(id) {
+      const meta = ensureTema(id);
+      meta.done = !meta.done;
+      saveState(); render();
+      toastShow(meta.done ? `✅ Tema ${id} marcado como visto` : `↩ Tema ${id} desmarcado`);
+      if (currentTemaId === id) updateModalButtons();
+    }
+
+    function toggleFav(id) {
+      const meta = ensureTema(id);
+      meta.fav = !meta.fav;
+      saveState(); render();
+      toastShow(meta.fav ? `⭐ Tema ${id} añadido a favoritos` : `Tema ${id} quitado de favoritos`);
+      if (currentTemaId === id) updateModalButtons();
+    }
+
+    /**********************
+     * MODAL
+     **********************/
+    let currentTemaId = null;
+
+    function openModal(id) {
+      currentTemaId = id;
+      const t = temas.find(x => x.id === id);
+      const meta = ensureTema(id);
+      meta.lastVisited = Date.now();
+      saveState();
+
+      modalTitle.textContent = `Tema ${t.id} — ${t.titulo}`;
+      modalSubtitle.textContent = t.url ? t.url : "Sin dashboard disponible aún";
+      notesArea.value = meta.notes || "";
+      noteSaved.classList.add("hidden");
+      updateModalButtons();
+
+      if (t.url) {
+        noGammaPlaceholder.classList.add("hidden");
+        modalIframe.classList.remove("hidden");
+        iframeHint.classList.add("hidden");
+        modalIframe.src = "about:blank";
+        setTimeout(() => {
+          modalIframe.src = t.url;
+        }, 60);
+        btnOpenNew.disabled = false;
+        btnOpenNew.onclick = () => window.open(t.url, "_blank");
+        modalBadge.className = "chip text-white gamma-badge";
+        modalBadge.innerHTML = `<i class="fas fa-bolt"></i>Gamma`;
+      } else {
+        modalIframe.classList.add("hidden");
+        noGammaPlaceholder.classList.remove("hidden");
+        iframeHint.classList.add("hidden");
+        modalIframe.src = "about:blank";
+        btnOpenNew.disabled = true;
+        modalBadge.className = "chip bg-slate-100 text-slate-500 border border-slate-200";
+        modalBadge.innerHTML = `<i class="fas fa-clock"></i>Próximamente`;
+      }
+
+      modal.classList.remove("hidden");
+      document.body.classList.add("modal-open");
+      render();
+    }
+
+    function closeModal() {
+      modal.classList.add("hidden");
+      document.body.classList.remove("modal-open");
+      modalIframe.src = "about:blank";
+      currentTemaId = null;
+      iframeHint.classList.add("hidden");
+    }
+
+    function updateModalButtons() {
+      if (!currentTemaId) return;
+      const meta = ensureTema(currentTemaId);
+      btnMarkDone.innerHTML = meta.done
+        ? `<i class="fas fa-rotate-left mr-2"></i>Desmarcar visto`
+        : `<i class="fas fa-check mr-2"></i>Marcar visto`;
+      btnFav.innerHTML = meta.fav
+        ? `<i class="fas fa-star mr-2"></i>Quitar favorito`
+        : `<i class="fas fa-star mr-2"></i>Favorito`;
+      btnMarkDone.onclick = () => toggleDone(currentTemaId);
+      btnFav.onclick = () => toggleFav(currentTemaId);
+      btnMarkDone.className = meta.done
+        ? "px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200"
+        : "px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold";
+      btnFav.className = meta.fav
+        ? "px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200"
+        : "px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold";
+    }
+
+    btnCloseModal.addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); buscador.focus(); }
+      if (e.key === "Escape" && !modal.classList.contains("hidden")) closeModal();
+    });
+
+    /**********************
+     * NOTES
+     **********************/
+    btnSaveNote.addEventListener("click", () => {
+      if (!currentTemaId) return;
+      ensureTema(currentTemaId).notes = notesArea.value || "";
+      saveState();
+      noteSaved.classList.remove("hidden");
+      setTimeout(() => noteSaved.classList.add("hidden"), 1200);
+      render();
+      toastShow("Notas guardadas");
+    });
+
+    btnClearNote.addEventListener("click", () => {
+      if (!currentTemaId) return;
+      notesArea.value = "";
+      ensureTema(currentTemaId).notes = "";
+      saveState(); render();
+      toastShow("Notas borradas");
+    });
+
+    /**********************
+     * FILTERS / SEARCH / ORDER / VIEW
+     **********************/
+    document.querySelectorAll(".filterBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.ui.filter = btn.getAttribute("data-filter");
+        saveState(); setActiveFilterButton(state.ui.filter); render();
+      });
+    });
+
+    buscador.addEventListener("input", render);
+    btnClear.addEventListener("click", () => { buscador.value = ""; render(); buscador.focus(); });
+    selectOrden.addEventListener("change", () => { state.ui.order = selectOrden.value; saveState(); render(); });
+    btnVistaGrid.addEventListener("click", () => setView("grid"));
+    btnVistaList.addEventListener("click", () => setView("list"));
+
+    /**********************
+     * EXPORT / IMPORT / RESET
+     **********************/
+    btnExport.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), state }, null, 2)], { type: "application/json" });
+      const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `panel-oposiciones-${new Date().toISOString().slice(0,10)}.json` });
+      document.body.appendChild(a); a.click(); a.remove();
+      toastShow("Exportación generada");
+    });
+
+    fileImport.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0]; if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        const incoming = parsed?.state;
+        if (!incoming || typeof incoming !== "object") throw new Error("Formato inválido");
+        state = incoming;
+        if (!state.temas) state.temas = {};
+        if (!state.ui) state.ui = { filter: "all", order: "id_asc", view: "grid" };
+        saveState(); applyUIFromState(); render();
+        toastShow("Importación completada");
+      } catch { alert("No se pudo importar. Asegúrate de que sea un JSON exportado desde este panel."); }
+      finally { fileImport.value = ""; }
+    });
+
+    btnReset.addEventListener("click", () => {
+      if (!confirm("Esto borrará progreso, favoritos y notas. ¿Continuar?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = loadState(); applyUIFromState(); render();
+      toastShow("Panel reiniciado");
+    });
+
+    /**********************
+     * HELPERS
+     **********************/
+    function escapeHtml(str) {
+      return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    function applyUIFromState() {
+      setActiveFilterButton(state.ui.filter || "all");
+      selectOrden.value = state.ui.order || "id_asc";
+      setView(state.ui.view || "grid");
+    }
+
+    /**********************
+     * INIT
+     **********************/
+    applyUIFromState();
+    render();
+  </script>
+</body>
+</html>
