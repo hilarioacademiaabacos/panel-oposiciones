@@ -9,11 +9,13 @@
   <style>
     .tema-card:hover { transform: translateY(-4px); transition: all 0.2s ease; }
     .chip { display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .55rem; border-radius:9999px; font-size:.72rem; font-weight:700; }
-    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; padding: .1rem .35rem; border: 1px solid #e2e8f0; border-bottom-width: 2px; border-radius: .35rem; background:#fff; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; padding:.1rem .35rem; border:1px solid #e2e8f0; border-bottom-width:2px; border-radius:.35rem; background:#fff; }
     .modal-open { overflow:hidden; }
-    .shadow-soft { box-shadow: 0 10px 30px rgba(2, 6, 23, .08); }
+    .shadow-soft { box-shadow: 0 10px 30px rgba(2,6,23,.08); }
     .gamma-badge { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
     .no-gamma { opacity: 0.65; }
+    #modal { display:flex; flex-direction:column; }
+    #modal.hidden { display:none; }
   </style>
 </head>
 
@@ -31,7 +33,6 @@
           <p class="text-white/80 text-sm">Panel de temas + dashboards Gamma</p>
         </div>
       </div>
-
       <div class="w-full lg:w-auto flex flex-col md:flex-row gap-3 md:items-center">
         <div class="relative w-full md:w-96">
           <input type="text" id="buscador"
@@ -39,11 +40,8 @@
             class="w-full pl-10 pr-24 py-2.5 rounded-full text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
             autocomplete="off"/>
           <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <button id="btnClear"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-600 hover:text-slate-900 px-2 py-1 rounded-lg hover:bg-slate-100"
-            title="Limpiar búsqueda">Limpiar</button>
+          <button id="btnClear" class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-600 hover:text-slate-900 px-2 py-1 rounded-lg hover:bg-slate-100">Limpiar</button>
         </div>
-
         <div class="flex flex-wrap gap-2">
           <button id="btnExport" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-sm font-semibold">
             <i class="fas fa-file-export mr-2"></i>Exportar
@@ -66,13 +64,12 @@
       <div class="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
         <div class="flex flex-wrap gap-2 items-center">
           <span class="chip bg-blue-50 text-blue-700 border border-blue-100"><i class="fas fa-layer-group"></i>FILTROS</span>
-          <button data-filter="all" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-border-all"></i>Todos</button>
+          <button data-filter="all"     class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-border-all"></i>Todos</button>
           <button data-filter="pending" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="far fa-circle"></i>Pendientes</button>
-          <button data-filter="done" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-check-circle"></i>Vistos</button>
-          <button data-filter="fav" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-star"></i>Favoritos</button>
-          <button data-filter="gamma" class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-bolt"></i>Con Gamma</button>
+          <button data-filter="done"    class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-check-circle"></i>Vistos</button>
+          <button data-filter="fav"     class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-star"></i>Favoritos</button>
+          <button data-filter="gamma"   class="filterBtn chip bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100"><i class="fas fa-bolt"></i>Con Gamma</button>
         </div>
-
         <div class="flex flex-col md:flex-row gap-3 md:items-center">
           <div class="flex items-center gap-2">
             <span class="text-sm text-slate-600">Orden:</span>
@@ -93,11 +90,10 @@
           <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
             <span class="kbd">Ctrl</span>+<span class="kbd">K</span> buscar
             <span class="mx-2">·</span>
-            <span class="kbd">Esc</span> cerrar modal
+            <span class="kbd">Esc</span> cerrar
           </div>
         </div>
       </div>
-
       <div class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
           <div class="text-xs text-slate-500">Total</div>
@@ -128,88 +124,77 @@
     <div id="gridTemas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
   </main>
 
-  <!-- Modal -->
-  <div id="modal" class="fixed inset-0 z-50 hidden">
-    <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/60"></div>
-    <div class="relative container mx-auto px-4 py-6 h-full flex items-center justify-center">
-      <div class="bg-white w-full max-w-6xl rounded-2xl shadow-soft overflow-hidden border border-slate-200" style="max-height:95vh;">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4 border-b border-slate-200">
-          <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100">
-              <i class="fas fa-bolt"></i>
-            </div>
-            <div>
-              <div class="flex flex-wrap items-center gap-2">
-                <h2 id="modalTitle" class="text-lg font-extrabold text-slate-800">Tema</h2>
-                <span id="modalBadge" class="chip text-white gamma-badge"><i class="fas fa-bolt"></i>Gamma</span>
-              </div>
-              <p id="modalSubtitle" class="text-sm text-slate-500"></p>
-            </div>
-          </div>
+  <!-- ===== MODAL PANTALLA COMPLETA ===== -->
+  <div id="modal" class="hidden fixed inset-0 z-50 bg-white">
 
-          <div class="flex flex-wrap gap-2 items-center justify-end">
-            <button id="btnMarkDone" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">
-              <i class="fas fa-check mr-2"></i>Marcar visto
-            </button>
-            <button id="btnFav" class="px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold">
-              <i class="fas fa-star mr-2"></i>Favorito
-            </button>
-            <button id="btnOpenNew" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
-              <i class="fas fa-arrow-up-right-from-square mr-2"></i>Abrir en Gamma
-            </button>
-            <button id="btnCloseModal" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200">
-              <i class="fas fa-xmark mr-2"></i>Cerrar
-            </button>
-          </div>
+    <!-- Barra superior fija -->
+    <div class="flex-shrink-0 bg-white border-b border-slate-200 flex items-center justify-between gap-2 px-4 py-3 shadow-sm">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100 flex-shrink-0">
+          <i class="fas fa-bolt"></i>
         </div>
+        <h2 id="modalTitle" class="text-base font-extrabold text-slate-800 truncate">Tema</h2>
+        <span id="modalBadge" class="chip text-white gamma-badge flex-shrink-0"><i class="fas fa-bolt"></i>Gamma</span>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="btnMarkDone" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">
+          <i class="fas fa-check"></i><span class="hidden sm:inline ml-1">Visto</span>
+        </button>
+        <button id="btnFav" class="px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold">
+          <i class="fas fa-star"></i><span class="hidden sm:inline ml-1">Fav</span>
+        </button>
+        <button id="btnNotes" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200">
+          <i class="fas fa-note-sticky"></i><span class="hidden sm:inline ml-1">Notas</span>
+        </button>
+        <button id="btnOpenNew" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
+          <i class="fas fa-arrow-up-right-from-square"></i><span class="hidden sm:inline ml-1">Abrir en Gamma</span>
+        </button>
+        <button id="btnCloseModal" class="px-3 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold border border-red-200">
+          <i class="fas fa-xmark"></i><span class="hidden sm:inline ml-1">Cerrar</span>
+        </button>
+      </div>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4" style="max-height:calc(95vh - 80px); overflow:hidden;">
-          <!-- Viewer -->
-          <div class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col">
-            <div id="iframeHint" class="hidden p-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
-              <i class="fas fa-triangle-exclamation mr-2"></i>
-              Si el dashboard no carga aquí, usa <b>"Abrir en Gamma"</b> para verlo en pestaña nueva.
-            </div>
-            <!-- No gamma placeholder -->
-            <div id="noGammaPlaceholder" class="hidden w-full h-full flex items-center justify-center p-10 text-center bg-slate-50" style="min-height:65vh;">
-              <div>
-                <div class="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center mx-auto mb-4">
-                  <i class="fas fa-clock text-2xl text-slate-400"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-700 mb-2">Dashboard próximamente</h3>
-                <p class="text-slate-500 text-sm max-w-xs mx-auto">Este tema aún no tiene dashboard Gamma. Se añadirá cuando esté disponible.</p>
-              </div>
-            </div>
-            <iframe id="modalIframe" title="Dashboard Gamma"
-              class="w-full bg-white" style="height:65vh;min-height:65vh;"
-              src="about:blank" loading="lazy" allow="fullscreen"></iframe>
+    <!-- Área del iframe: ocupa el 100% del espacio restante -->
+    <div class="relative" style="height: calc(100vh - 57px);">
+      <div id="noGammaPlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-slate-50 text-center p-10">
+        <div>
+          <div class="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-clock text-2xl text-slate-400"></i>
           </div>
-
-          <!-- Notes -->
-          <div class="lg:col-span-1 p-4 overflow-y-auto">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-extrabold text-slate-800">Notas rápidas</h3>
-              <span id="noteSaved" class="text-xs text-emerald-600 hidden"><i class="fas fa-check mr-1"></i>Guardado</span>
-            </div>
-            <p class="text-xs text-slate-500 mb-3">Apuntes breves por tema (guardados en tu navegador).</p>
-            <textarea id="notesArea"
-              class="w-full rounded-2xl border border-slate-200 p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              style="min-height:280px;"
-              placeholder="Ej: 'Recordar autores clave', 'Conectar con DUA', 'Meter ejemplo de aula rural'…"></textarea>
-            <div class="mt-3 flex gap-2">
-              <button id="btnSaveNote" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold">
-                <i class="fas fa-floppy-disk mr-2"></i>Guardar
-              </button>
-              <button id="btnClearNote" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200">
-                <i class="fas fa-eraser mr-2"></i>Borrar
-              </button>
-            </div>
-            <div class="mt-4 pt-4 border-t border-slate-200 text-xs text-slate-500 space-y-1">
-              <div><b>Privacidad:</b> usa localStorage (no envía datos).</div>
-              <div><b>Sugerencia:</b> Exportar/Importar para varios equipos.</div>
-            </div>
-          </div>
+          <h3 class="text-xl font-bold text-slate-700 mb-2">Dashboard próximamente</h3>
+          <p class="text-slate-500 text-sm max-w-xs mx-auto">Este tema aún no tiene dashboard Gamma.</p>
         </div>
+      </div>
+      <iframe id="modalIframe" title="Dashboard Gamma"
+        class="absolute inset-0 w-full h-full border-0 bg-white"
+        src="about:blank" loading="lazy" allow="fullscreen"></iframe>
+    </div>
+
+    <!-- Panel de notas deslizante -->
+    <div id="notesPanel" class="hidden fixed top-0 right-0 h-full w-80 bg-white border-l border-slate-200 shadow-2xl z-60 flex flex-col p-5 overflow-y-auto">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-extrabold text-slate-800"><i class="fas fa-note-sticky mr-2 text-indigo-500"></i>Notas rápidas</h3>
+        <button id="btnCloseNotes" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+          <i class="fas fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">Guardadas en tu navegador para este tema.</p>
+      <textarea id="notesArea"
+        class="flex-1 w-full rounded-2xl border border-slate-200 p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
+        style="min-height:300px;"
+        placeholder="Ej: 'Recordar autores clave', 'Conectar con DUA'…"></textarea>
+      <div class="mt-3 flex gap-2">
+        <button id="btnSaveNote" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold">
+          <i class="fas fa-floppy-disk mr-2"></i>Guardar
+        </button>
+        <button id="btnClearNote" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200">
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+      <span id="noteSaved" class="text-xs text-emerald-600 hidden mt-2 text-center"><i class="fas fa-check mr-1"></i>Guardado</span>
+      <div class="mt-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
+        <b>Privacidad:</b> usa localStorage, no envía datos.
       </div>
     </div>
   </div>
@@ -227,33 +212,27 @@
      * ╔══════════════════════════════════════╗
      * ║  CONFIGURA AQUÍ TUS DASHBOARDS GAMMA ║
      * ╚══════════════════════════════════════╝
-     *
-     * Formato: { id: N, titulo: "...", descripcion: "...", url: "https://..." }
-     * - Pon url: null para temas sin dashboard todavía.
-     * - El sistema genera automáticamente tarjetas para los 25 temas.
+     * Usa siempre la URL: gamma.app/embed/XXXX
+     * (Gamma → Share → Embed → copia solo la URL del src)
      **********************/
     const TOTAL_TEMAS = 25;
 
     const GAMMA_URLS = {
       1: "https://gamma.app/embed/bl2apr4o37odfqu",
       2: "https://gamma.app/embed/g2fv54bvo71nnk2",
-      // ── Añade aquí los siguientes temas cuando los tengas ──
-      // 3: "https://tu-tema-3.gamma.site/",
-      // 4: "https://tu-tema-4.gamma.site/",
-      // ... hasta el 25
+      // ── Añade los siguientes cuando los tengas ──
+      // 3: "https://gamma.app/embed/XXXXXXXX",
+      // 4: "https://gamma.app/embed/XXXXXXXX",
     };
 
-    // Títulos personalizados (opcional, si no se pone usa "Tema N")
     const TITULOS = {
       1: "Desarrollo Psicoevolutivo (6-12 años)",
       2: "La Concreción del Currículo en el PEC",
-      // 3: "Tu título aquí",
     };
 
-    // Descripciones personalizadas (opcional)
     const DESCRIPCIONES = {
-      1: "Aspectos cognitivos, motrices, afectivos y sociales. Implicaciones en el proceso educativo y de enseñanza-aprendizaje.",
-      2: "Programación docente, principios pedagógicos, estrategias para su elaboración en ciclo, curso y aula. Coordinación docente.",
+      1: "Aspectos cognitivos, motrices, afectivos y sociales. Implicaciones en el proceso educativo.",
+      2: "Programación docente, principios pedagógicos, estrategias de elaboración y coordinación docente.",
     };
 
     /**********************
@@ -265,17 +244,14 @@
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return { temas: {}, ui: { filter: "all", order: "id_asc", view: "grid" } };
-        const parsed = JSON.parse(raw);
-        if (!parsed.temas) parsed.temas = {};
-        if (!parsed.ui) parsed.ui = { filter: "all", order: "id_asc", view: "grid" };
-        return parsed;
+        const p = JSON.parse(raw);
+        if (!p.temas) p.temas = {};
+        if (!p.ui)    p.ui    = { filter: "all", order: "id_asc", view: "grid" };
+        return p;
       } catch { return { temas: {}, ui: { filter: "all", order: "id_asc", view: "grid" } }; }
     }
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      refreshStats();
-    }
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); refreshStats(); }
 
     function ensureTema(id) {
       if (!state.temas[id]) state.temas[id] = { done: false, fav: false, lastVisited: null, notes: "" };
@@ -284,61 +260,54 @@
 
     let state = loadState();
 
-    /**********************
-     * DATA
-     **********************/
     const temas = Array.from({ length: TOTAL_TEMAS }, (_, i) => {
       const id = i + 1;
       return {
         id,
-        titulo: TITULOS[id] || `Tema ${id}`,
+        titulo:      TITULOS[id]      || `Tema ${id}`,
         descripcion: DESCRIPCIONES[id] || `Materiales y dashboard del Tema ${id}.`,
-        url: GAMMA_URLS[id] || null
+        url:         GAMMA_URLS[id]    || null
       };
     });
 
     /**********************
      * ELEMENTS
      **********************/
-    const grid = document.getElementById("gridTemas");
-    const buscador = document.getElementById("buscador");
-    const btnClear = document.getElementById("btnClear");
-    const selectOrden = document.getElementById("selectOrden");
+    const grid         = document.getElementById("gridTemas");
+    const buscador     = document.getElementById("buscador");
+    const btnClear     = document.getElementById("btnClear");
+    const selectOrden  = document.getElementById("selectOrden");
     const btnVistaGrid = document.getElementById("btnVistaGrid");
     const btnVistaList = document.getElementById("btnVistaList");
-    const statTotal = document.getElementById("statTotal");
-    const statDone = document.getElementById("statDone");
-    const statPending = document.getElementById("statPending");
-    const statFav = document.getElementById("statFav");
-    const statGamma = document.getElementById("statGamma");
-    const btnExport = document.getElementById("btnExport");
-    const fileImport = document.getElementById("fileImport");
-    const btnReset = document.getElementById("btnReset");
+    const statTotal    = document.getElementById("statTotal");
+    const statDone     = document.getElementById("statDone");
+    const statPending  = document.getElementById("statPending");
+    const statFav      = document.getElementById("statFav");
+    const statGamma    = document.getElementById("statGamma");
+    const btnExport    = document.getElementById("btnExport");
+    const fileImport   = document.getElementById("fileImport");
+    const btnReset     = document.getElementById("btnReset");
 
-    // Modal
-    const modal = document.getElementById("modal");
-    const modalBackdrop = document.getElementById("modalBackdrop");
-    const btnCloseModal = document.getElementById("btnCloseModal");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalSubtitle = document.getElementById("modalSubtitle");
-    const modalBadge = document.getElementById("modalBadge");
-    const modalIframe = document.getElementById("modalIframe");
-    const iframeHint = document.getElementById("iframeHint");
+    const modal              = document.getElementById("modal");
+    const btnCloseModal      = document.getElementById("btnCloseModal");
+    const modalTitle         = document.getElementById("modalTitle");
+    const modalBadge         = document.getElementById("modalBadge");
+    const modalIframe        = document.getElementById("modalIframe");
     const noGammaPlaceholder = document.getElementById("noGammaPlaceholder");
-    const btnOpenNew = document.getElementById("btnOpenNew");
-    const btnMarkDone = document.getElementById("btnMarkDone");
-    const btnFav = document.getElementById("btnFav");
-    const notesArea = document.getElementById("notesArea");
-    const btnSaveNote = document.getElementById("btnSaveNote");
-    const btnClearNote = document.getElementById("btnClearNote");
-    const noteSaved = document.getElementById("noteSaved");
-    const toast = document.getElementById("toast");
-    const toastMsg = document.getElementById("toastMsg");
+    const btnOpenNew         = document.getElementById("btnOpenNew");
+    const btnMarkDone        = document.getElementById("btnMarkDone");
+    const btnFav             = document.getElementById("btnFav");
+    const btnNotes           = document.getElementById("btnNotes");
+    const notesPanel         = document.getElementById("notesPanel");
+    const btnCloseNotes      = document.getElementById("btnCloseNotes");
+    const notesArea          = document.getElementById("notesArea");
+    const btnSaveNote        = document.getElementById("btnSaveNote");
+    const btnClearNote       = document.getElementById("btnClearNote");
+    const noteSaved          = document.getElementById("noteSaved");
+    const toast              = document.getElementById("toast");
+    const toastMsg           = document.getElementById("toastMsg");
     let toastTimer = null;
 
-    /**********************
-     * TOAST
-     **********************/
     function toastShow(msg) {
       toastMsg.textContent = msg;
       toast.classList.remove("hidden");
@@ -347,20 +316,23 @@
     }
 
     /**********************
-     * UI STATE
+     * FILTER BUTTONS
      **********************/
     function setActiveFilterButton(filter) {
       document.querySelectorAll(".filterBtn").forEach(btn => {
         const active = btn.getAttribute("data-filter") === filter;
-        btn.classList.toggle("bg-blue-600", active);
-        btn.classList.toggle("text-white", active);
+        btn.classList.toggle("bg-blue-600",     active);
+        btn.classList.toggle("text-white",      active);
         btn.classList.toggle("border-blue-600", active);
-        btn.classList.toggle("bg-slate-50", !active);
+        btn.classList.toggle("bg-slate-50",    !active);
         btn.classList.toggle("text-slate-700", !active);
-        btn.classList.toggle("border-slate-200", !active);
+        btn.classList.toggle("border-slate-200",!active);
       });
     }
 
+    /**********************
+     * VIEW
+     **********************/
     function setView(view) {
       state.ui.view = view;
       saveState();
@@ -384,28 +356,28 @@
      * RENDER
      **********************/
     function render() {
-      const q = buscador.value.toLowerCase().trim();
+      const q      = buscador.value.toLowerCase().trim();
       const filter = state.ui.filter || "all";
-      const order = state.ui.order || "id_asc";
-      const view = state.ui.view || "grid";
+      const order  = state.ui.order  || "id_asc";
+      const view   = state.ui.view   || "grid";
 
       let lista = temas.filter(t => {
         const meta = ensureTema(t.id);
         if (q && !t.titulo.toLowerCase().includes(q) && !t.descripcion.toLowerCase().includes(q) && !String(t.id).includes(q)) return false;
-        if (filter === "done" && !meta.done) return false;
-        if (filter === "pending" && meta.done) return false;
-        if (filter === "fav" && !meta.fav) return false;
-        if (filter === "gamma" && !t.url) return false;
+        if (filter === "done"    && !meta.done) return false;
+        if (filter === "pending" &&  meta.done) return false;
+        if (filter === "fav"     && !meta.fav)  return false;
+        if (filter === "gamma"   && !t.url)     return false;
         return true;
       });
 
       lista.sort((a, b) => {
         const ma = ensureTema(a.id), mb = ensureTema(b.id);
-        if (order === "id_asc") return a.id - b.id;
-        if (order === "id_desc") return b.id - a.id;
+        if (order === "id_asc")    return a.id - b.id;
+        if (order === "id_desc")   return b.id - a.id;
         if (order === "last_desc") return (mb.lastVisited||0) - (ma.lastVisited||0);
-        if (order === "last_asc") return (ma.lastVisited||0) - (mb.lastVisited||0);
-        if (order === "fav_desc") return (mb.fav?1:0) - (ma.fav?1:0);
+        if (order === "last_asc")  return (ma.lastVisited||0) - (mb.lastVisited||0);
+        if (order === "fav_desc")  return (mb.fav?1:0) - (ma.fav?1:0);
         if (order === "done_desc") return (mb.done?1:0) - (ma.done?1:0);
         return 0;
       });
@@ -413,12 +385,11 @@
       grid.innerHTML = "";
 
       lista.forEach(t => {
-        const meta = ensureTema(t.id);
-        const card = document.createElement("div");
-        const doneClass = meta.done ? "border-emerald-200 bg-emerald-50/30" : "";
-        const favIcon = meta.fav ? "fas fa-star text-yellow-400" : "far fa-star text-slate-400 hover:text-yellow-400";
-        const doneBadge = meta.done
-          ? `<span class="chip bg-emerald-100 text-emerald-700 border border-emerald-200"><i class="fas fa-check-circle"></i>Visto</span>` : "";
+        const meta       = ensureTema(t.id);
+        const card       = document.createElement("div");
+        const doneClass  = meta.done ? "border-emerald-200 bg-emerald-50/30" : "";
+        const favIcon    = meta.fav  ? "fas fa-star text-yellow-400" : "far fa-star text-slate-400 hover:text-yellow-400";
+        const doneBadge  = meta.done ? `<span class="chip bg-emerald-100 text-emerald-700 border border-emerald-200"><i class="fas fa-check-circle"></i>Visto</span>` : "";
         const gammaBadge = t.url
           ? `<span class="chip text-white gamma-badge"><i class="fas fa-bolt"></i>Gamma</span>`
           : `<span class="chip bg-slate-100 text-slate-500 border border-slate-200"><i class="fas fa-clock"></i>Próximamente</span>`;
@@ -432,9 +403,7 @@
             <div>
               <div class="flex justify-between items-start mb-4">
                 <div class="flex flex-wrap gap-1">${gammaBadge}${doneBadge}</div>
-                <button class="btnFavCard" data-id="${t.id}" title="Favorito" aria-label="Favorito">
-                  <i class="${favIcon} text-lg"></i>
-                </button>
+                <button class="btnFavCard" data-id="${t.id}" title="Favorito"><i class="${favIcon} text-lg"></i></button>
               </div>
               <div class="flex items-center gap-2 mb-2">
                 <span class="chip bg-blue-50 text-blue-700 border border-blue-100 text-base font-extrabold">#${t.id}</span>
@@ -442,20 +411,18 @@
               </div>
               <p class="text-slate-500 text-sm mb-3">${t.descripcion}</p>
               <div class="text-xs text-slate-500 flex items-center gap-2">
-                <i class="fas fa-clock"></i>
-                <span><b>Última visita:</b> ${last}</span>
+                <i class="fas fa-clock"></i><span><b>Última visita:</b> ${last}</span>
               </div>
               ${meta.notes ? `<div class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700"><div class="font-bold mb-1"><i class="fas fa-note-sticky mr-2 text-slate-400"></i>Notas</div><div class="line-clamp-2">${escapeHtml(meta.notes).slice(0,180)}${meta.notes.length>180?"…":""}</div></div>` : ""}
             </div>
             <div class="mt-4 grid grid-cols-2 gap-2">
-              <button class="btnOpenModal w-full ${t.url ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"} text-white font-semibold py-2 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+              <button class="btnOpenModal w-full ${t.url ? "bg-indigo-600 hover:bg-indigo-700" : "bg-slate-300 cursor-not-allowed"} text-white font-semibold py-2 px-4 rounded-xl flex items-center justify-center gap-2"
                 data-id="${t.id}" ${!t.url ? "disabled" : ""}>
-                <i class="fas fa-bolt"></i> ${t.url ? "Ver Tema" : "Sin dashboard"}
+                <i class="fas fa-bolt"></i>${t.url ? "Ver Tema" : "Sin dashboard"}
               </button>
-              <button class="btnToggleDone w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-xl transition-colors border border-slate-200 flex items-center justify-center gap-2"
+              <button class="btnToggleDone w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-xl border border-slate-200 flex items-center justify-center gap-2"
                 data-id="${t.id}">
-                <i class="${meta.done ? "fas fa-rotate-left" : "fas fa-check"}"></i>
-                ${meta.done ? "Desmarcar" : "Visto"}
+                <i class="${meta.done ? "fas fa-rotate-left" : "fas fa-check"}"></i>${meta.done ? "Desmarcar" : "Visto"}
               </button>
             </div>`;
         } else {
@@ -469,13 +436,12 @@
               </div>
               <div class="text-sm text-slate-500 mb-1">${t.descripcion}</div>
               <div class="text-xs text-slate-500 flex items-center gap-2">
-                <i class="fas fa-clock"></i>
-                <span><b>Última visita:</b> ${last}</span>
+                <i class="fas fa-clock"></i><span><b>Última visita:</b> ${last}</span>
                 ${meta.notes ? `<span class="ml-2 chip bg-slate-50 text-slate-700 border border-slate-200"><i class="fas fa-note-sticky"></i>Con notas</span>` : ""}
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button class="btnFavCard px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50" data-id="${t.id}" title="Favorito"><i class="${favIcon}"></i></button>
+              <button class="btnFavCard px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50" data-id="${t.id}"><i class="${favIcon}"></i></button>
               <button class="btnToggleDone px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold border border-slate-200" data-id="${t.id}">
                 <i class="${meta.done ? "fas fa-rotate-left" : "fas fa-check"} mr-2"></i>${meta.done ? "Desmarcar" : "Visto"}
               </button>
@@ -485,7 +451,6 @@
               </button>
             </div>`;
         }
-
         grid.appendChild(card);
       });
 
@@ -494,31 +459,30 @@
     }
 
     function hookCardEvents() {
-      grid.querySelectorAll(".btnOpenModal:not([disabled])").forEach(btn => {
-        btn.addEventListener("click", (e) => { e.stopPropagation(); openModal(Number(btn.getAttribute("data-id"))); });
-      });
-      grid.querySelectorAll(".btnToggleDone").forEach(btn => {
-        btn.addEventListener("click", (e) => { e.stopPropagation(); toggleDone(Number(btn.getAttribute("data-id"))); });
-      });
-      grid.querySelectorAll(".btnFavCard").forEach(btn => {
-        btn.addEventListener("click", (e) => { e.stopPropagation(); toggleFav(Number(btn.getAttribute("data-id"))); });
-      });
+      grid.querySelectorAll(".btnOpenModal:not([disabled])").forEach(btn =>
+        btn.addEventListener("click", e => { e.stopPropagation(); openModal(Number(btn.getAttribute("data-id"))); })
+      );
+      grid.querySelectorAll(".btnToggleDone").forEach(btn =>
+        btn.addEventListener("click", e => { e.stopPropagation(); toggleDone(Number(btn.getAttribute("data-id"))); })
+      );
+      grid.querySelectorAll(".btnFavCard").forEach(btn =>
+        btn.addEventListener("click", e => { e.stopPropagation(); toggleFav(Number(btn.getAttribute("data-id"))); })
+      );
     }
 
     function refreshStats() {
-      const all = temas.length;
       let done = 0, fav = 0, gammaCount = 0;
       temas.forEach(t => {
-        const meta = ensureTema(t.id);
-        if (meta.done) done++;
-        if (meta.fav) fav++;
-        if (t.url) gammaCount++;
+        const m = ensureTema(t.id);
+        if (m.done) done++;
+        if (m.fav)  fav++;
+        if (t.url)  gammaCount++;
       });
-      statTotal.textContent = all;
-      statDone.textContent = done;
-      statPending.textContent = all - done;
-      statFav.textContent = fav;
-      statGamma.textContent = gammaCount;
+      statTotal.textContent   = temas.length;
+      statDone.textContent    = done;
+      statPending.textContent = temas.length - done;
+      statFav.textContent     = fav;
+      statGamma.textContent   = gammaCount;
     }
 
     /**********************
@@ -536,7 +500,7 @@
       const meta = ensureTema(id);
       meta.fav = !meta.fav;
       saveState(); render();
-      toastShow(meta.fav ? `⭐ Tema ${id} añadido a favoritos` : `Tema ${id} quitado de favoritos`);
+      toastShow(meta.fav ? `⭐ Tema ${id} en favoritos` : `Tema ${id} quitado de favoritos`);
       if (currentTemaId === id) updateModalButtons();
     }
 
@@ -547,33 +511,29 @@
 
     function openModal(id) {
       currentTemaId = id;
-      const t = temas.find(x => x.id === id);
+      const t    = temas.find(x => x.id === id);
       const meta = ensureTema(id);
       meta.lastVisited = Date.now();
       saveState();
 
       modalTitle.textContent = `Tema ${t.id} — ${t.titulo}`;
-      modalSubtitle.textContent = t.url ? t.url : "Sin dashboard disponible aún";
       notesArea.value = meta.notes || "";
       noteSaved.classList.add("hidden");
+      notesPanel.classList.add("hidden");
       updateModalButtons();
 
       if (t.url) {
         noGammaPlaceholder.classList.add("hidden");
         modalIframe.classList.remove("hidden");
-        iframeHint.classList.add("hidden");
         modalIframe.src = "about:blank";
-        setTimeout(() => {
-          modalIframe.src = t.url;
-        }, 60);
+        setTimeout(() => { modalIframe.src = t.url; }, 60);
         btnOpenNew.disabled = false;
-        btnOpenNew.onclick = () => window.open(t.url, "_blank");
+        btnOpenNew.onclick  = () => window.open(t.url, "_blank");
         modalBadge.className = "chip text-white gamma-badge";
         modalBadge.innerHTML = `<i class="fas fa-bolt"></i>Gamma`;
       } else {
         modalIframe.classList.add("hidden");
         noGammaPlaceholder.classList.remove("hidden");
-        iframeHint.classList.add("hidden");
         modalIframe.src = "about:blank";
         btnOpenNew.disabled = true;
         modalBadge.className = "chip bg-slate-100 text-slate-500 border border-slate-200";
@@ -587,23 +547,26 @@
 
     function closeModal() {
       modal.classList.add("hidden");
+      notesPanel.classList.add("hidden");
       document.body.classList.remove("modal-open");
       modalIframe.src = "about:blank";
       currentTemaId = null;
-      iframeHint.classList.add("hidden");
     }
 
     function updateModalButtons() {
       if (!currentTemaId) return;
       const meta = ensureTema(currentTemaId);
+
       btnMarkDone.innerHTML = meta.done
-        ? `<i class="fas fa-rotate-left mr-2"></i>Desmarcar visto`
-        : `<i class="fas fa-check mr-2"></i>Marcar visto`;
+        ? `<i class="fas fa-rotate-left"></i><span class="hidden sm:inline ml-1">Desmarcar</span>`
+        : `<i class="fas fa-check"></i><span class="hidden sm:inline ml-1">Visto</span>`;
       btnFav.innerHTML = meta.fav
-        ? `<i class="fas fa-star mr-2"></i>Quitar favorito`
-        : `<i class="fas fa-star mr-2"></i>Favorito`;
+        ? `<i class="fas fa-star"></i><span class="hidden sm:inline ml-1">Quitar fav.</span>`
+        : `<i class="fas fa-star"></i><span class="hidden sm:inline ml-1">Fav</span>`;
+
       btnMarkDone.onclick = () => toggleDone(currentTemaId);
-      btnFav.onclick = () => toggleFav(currentTemaId);
+      btnFav.onclick      = () => toggleFav(currentTemaId);
+
       btnMarkDone.className = meta.done
         ? "px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200"
         : "px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold";
@@ -613,11 +576,16 @@
     }
 
     btnCloseModal.addEventListener("click", closeModal);
-    modalBackdrop.addEventListener("click", closeModal);
 
-    document.addEventListener("keydown", (e) => {
+    btnNotes.addEventListener("click", () => notesPanel.classList.toggle("hidden"));
+    btnCloseNotes.addEventListener("click", () => notesPanel.classList.add("hidden"));
+
+    document.addEventListener("keydown", e => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); buscador.focus(); }
-      if (e.key === "Escape" && !modal.classList.contains("hidden")) closeModal();
+      if (e.key === "Escape") {
+        if (!notesPanel.classList.contains("hidden")) { notesPanel.classList.add("hidden"); return; }
+        if (!modal.classList.contains("hidden")) closeModal();
+      }
     });
 
     /**********************
@@ -642,15 +610,14 @@
     });
 
     /**********************
-     * FILTERS / SEARCH / ORDER / VIEW
+     * FILTERS / SEARCH / ORDER
      **********************/
-    document.querySelectorAll(".filterBtn").forEach(btn => {
+    document.querySelectorAll(".filterBtn").forEach(btn =>
       btn.addEventListener("click", () => {
         state.ui.filter = btn.getAttribute("data-filter");
         saveState(); setActiveFilterButton(state.ui.filter); render();
-      });
-    });
-
+      })
+    );
     buscador.addEventListener("input", render);
     btnClear.addEventListener("click", () => { buscador.value = ""; render(); buscador.focus(); });
     selectOrden.addEventListener("change", () => { state.ui.order = selectOrden.value; saveState(); render(); });
@@ -662,24 +629,27 @@
      **********************/
     btnExport.addEventListener("click", () => {
       const blob = new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), state }, null, 2)], { type: "application/json" });
-      const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `panel-oposiciones-${new Date().toISOString().slice(0,10)}.json` });
+      const a = Object.assign(document.createElement("a"), {
+        href: URL.createObjectURL(blob),
+        download: `panel-oposiciones-${new Date().toISOString().slice(0,10)}.json`
+      });
       document.body.appendChild(a); a.click(); a.remove();
       toastShow("Exportación generada");
     });
 
-    fileImport.addEventListener("change", async (e) => {
+    fileImport.addEventListener("change", async e => {
       const file = e.target.files?.[0]; if (!file) return;
       try {
-        const parsed = JSON.parse(await file.text());
+        const parsed   = JSON.parse(await file.text());
         const incoming = parsed?.state;
         if (!incoming || typeof incoming !== "object") throw new Error("Formato inválido");
         state = incoming;
         if (!state.temas) state.temas = {};
-        if (!state.ui) state.ui = { filter: "all", order: "id_asc", view: "grid" };
+        if (!state.ui)    state.ui    = { filter: "all", order: "id_asc", view: "grid" };
         saveState(); applyUIFromState(); render();
         toastShow("Importación completada");
       } catch { alert("No se pudo importar. Asegúrate de que sea un JSON exportado desde este panel."); }
-      finally { fileImport.value = ""; }
+      finally  { fileImport.value = ""; }
     });
 
     btnReset.addEventListener("click", () => {
@@ -693,7 +663,9 @@
      * HELPERS
      **********************/
     function escapeHtml(str) {
-      return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      return String(str)
+        .replaceAll("&","&amp;").replaceAll("<","&lt;")
+        .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
 
     function applyUIFromState() {
@@ -702,9 +674,6 @@
       setView(state.ui.view || "grid");
     }
 
-    /**********************
-     * INIT
-     **********************/
     applyUIFromState();
     render();
   </script>
